@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Lista de Contatos - Supabase</title>
+</head>
+<body>
+  <h1>Lista de Contatos</h1>
+  <input id="nome" placeholder="Nome">
+  <input id="email" placeholder="E-mail">
+  <button id="add">Adicionar</button>
+  <ul id="list"></ul>
+
+<h2>Login</h2>
+<input id="emailAuth" placeholder="E-mail">
+<input id="senhaAuth" type="password" placeholder="Senha">
+<button id="login">Entrar</button>
+<button id="signup">Cadastrar</button>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+  <script>
+    const SUPABASE_URL = "https://phhjudtzzrehfhflegni.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBoaGp1ZHR6enJlaGZoZmxlZ25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NzgyOTgsImV4cCI6MjA3ODU1NDI5OH0.JiBclltPo1-IfhMO7IALocClh9vi6iI0nskuxoHiStc";
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function cadastrar() {
+    const email = document.getElementById('emailAuth').value.trim();
+    const password = document.getElementById('senhaAuth').value.trim();
+    const { data, error } = await supabase.auth.signUp({ email, password });
+
+    if (error) return alert("Erro ao cadastrar: " + error.message);
+    alert("Usuário cadastrado! Verifique seu e-mail para confirmar.");
+  }
+
+  async function logar() {
+    const email = document.getElementById('emailAuth').value.trim();
+    const password = document.getElementById('senhaAuth').value.trim();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) return alert("Erro ao entrar: " + error.message);
+    alert("Login realizado com sucesso!");
+  }
+
+  document.getElementById('signup').onclick = cadastrar;
+  document.getElementById('login').onclick = logar;
+
+    async function buscarContatos() {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar:', error);
+        return;
+      }
+
+      const ul = document.getElementById('list');
+      ul.innerHTML = data.map(c => `<li>${c.name} — ${c.email}</li>`).join('');
+    }
+
+    async function adicionarContato() {
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+      if (!nome || !email) {
+        alert('Preencha os dois campos!');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('contacts')
+        .insert([{ name: nome, email }]);
+
+      if (error) {
+        alert('Erro ao adicionar: ' + error.message);
+        return;
+      }
+
+      document.getElementById('nome').value = '';
+      document.getElementById('email').value = '';
+      buscarContatos();
+    }
+
+    document.getElementById('add').onclick = adicionarContato;
+    buscarContatos();
+  </script>
+</body>
+</html>
